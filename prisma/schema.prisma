@@ -1,0 +1,303 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContactStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+enum AIProvider {
+  GEMINI
+  OLLAMA
+  DISABLED
+}
+
+enum AIToolType {
+  ASSISTANT
+  CASE_STUDY
+  CODE_REVIEW
+  CODE_EXPLAIN
+  PLAYGROUND
+  BLOG_ASSISTANT
+  CONTACT_AGENT
+}
+
+// ============================================
+// USER & PROFILE
+// ============================================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(USER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile         Profile?
+  aiConversations AIConversation[]
+  blogPosts       BlogPost[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Profile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  headline         String
+  bio              String   @db.Text
+  shortBio         String
+  location         String?
+  email            String?
+  phone            String?
+  avatarUrl        String?
+  resumeUrl        String?
+  githubUrl        String?
+  linkedinUrl      String?
+  twitterUrl       String?
+  websiteUrl       String?
+  availableForWork Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============================================
+// PROJECTS
+// ============================================
+
+model Project {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  title          String
+  shortDesc      String
+  description    String        @db.Text
+  problem        String?       @db.Text
+  solution       String?       @db.Text
+  architecture   String?       @db.Text
+  challenges     String?       @db.Text
+  lessonsLearned String?       @db.Text
+  futureWork     String?       @db.Text
+  thumbnailUrl   String?
+  images         String[]      @default([])
+  liveUrl        String?
+  repoUrl        String?
+  featured       Boolean       @default(false)
+  status         ProjectStatus @default(DRAFT)
+  order          Int           @default(0)
+  views          Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  technologies ProjectTechnology[]
+
+  @@index([slug])
+  @@index([featured])
+  @@index([status])
+}
+
+model ProjectTechnology {
+  id        String  @id @default(cuid())
+  projectId String
+  name      String
+  icon      String?
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// ============================================
+// SKILLS & SERVICES
+// ============================================
+
+model Skill {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  category String // e.g. "Frontend", "Backend", "DevOps", "AI"
+  icon     String?
+  level    Int     @default(80) // 0-100
+  order    Int     @default(0)
+
+  @@index([category])
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String   @db.Text
+  features    String[] @default([])
+  icon        String?
+  price       String?
+  order       Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+}
+
+// ============================================
+// BLOG
+// ============================================
+
+model BlogPost {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  title       String
+  excerpt     String
+  content     String     @db.Text
+  coverUrl    String?
+  metaTitle   String?
+  metaDesc    String?
+  status      BlogStatus @default(DRAFT)
+  publishedAt DateTime?
+  views       Int        @default(0)
+  authorId    String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  author User      @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  tags   BlogTag[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([authorId])
+}
+
+model BlogTag {
+  id     String @id @default(cuid())
+  postId String
+  name   String
+
+  post BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, name])
+  @@index([postId])
+}
+
+// ============================================
+// CONTACT
+// ============================================
+
+model ContactMessage {
+  id          String        @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  subject     String?
+  message     String        @db.Text
+  projectType String?
+  budget      String?
+  deadline    String?
+  techStack   String[]      @default([])
+  brief       String?       @db.Text
+  status      ContactStatus @default(NEW)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status])
+  @@index([email])
+}
+
+// ============================================
+// AI
+// ============================================
+
+model AIConversation {
+  id        String     @id @default(cuid())
+  userId    String?
+  sessionId String     @unique
+  title     String?
+  provider  AIProvider
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user     User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages AIMessage[]
+
+  @@index([userId])
+  @@index([sessionId])
+}
+
+model AIMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String // "user" | "assistant" | "system"
+  content        String   @db.Text
+  tokensUsed     Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+model AIUsageLog {
+  id           String     @id @default(cuid())
+  tool         AIToolType
+  provider     AIProvider
+  userId       String?
+  tokensIn     Int        @default(0)
+  tokensOut    Int        @default(0)
+  success      Boolean    @default(true)
+  errorMessage String?
+  createdAt    DateTime   @default(now())
+
+  @@index([tool])
+  @@index([provider])
+  @@index([createdAt])
+}
+
+// ============================================
+// SITE SETTINGS
+// ============================================
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  category  String   @default("general")
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+  @@index([category])
+}
