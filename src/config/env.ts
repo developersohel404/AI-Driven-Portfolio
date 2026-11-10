@@ -10,19 +10,21 @@ const envSchema = z.object({
 
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
 
-  JWT_ACCESS_SECRET: z.string().min(16, 'JWT_ACCESS_SECRET must be at least 16 chars'),
-  JWT_REFRESH_SECRET: z.string().min(16, 'JWT_REFRESH_SECRET must be at least 16 chars'),
+  JWT_ACCESS_SECRET: z.string().min(16),
+  JWT_REFRESH_SECRET: z.string().min(16),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
-  FRONTEND_URL: z.string().default('http://localhost:3000'),
+  FRONTEND_URL: z.string().default('http://localhost:5173'),
 
   AI_PROVIDER: z.enum(['gemini', 'ollama', 'disabled']).default('disabled'),
   GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default('gemini-1.5-flash'),
+  GEMINI_MODEL: z.string().default('gemini-3.8-flash'),
   OLLAMA_BASE_URL: z.string().default('http://localhost:11434'),
   OLLAMA_MODEL: z.string().default('llama3.2'),
+
   POLLINATIONS_API_KEY: z.string().optional(),
+  POLLINATIONS_MODEL: z.string().default('flux'),
 
   GITHUB_TOKEN: z.string().optional(),
 

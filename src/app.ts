@@ -20,7 +20,6 @@ import { dashboardRouter } from './modules/dashboard/dashboard.route';
 import { discoverRouter } from './modules/discover/discover.route';
 import { githubRouter } from './modules/github/github.route';
 import { profileController } from './modules/profile/profile.controller';
-
 import { profileAdminRouter, profilePublicRouter } from './modules/profile/profile.route';
 import { projectAdminRouter, projectPublicRouter } from './modules/projects/project.route';
 import { serviceAdminRouter, servicePublicRouter } from './modules/services/service.route';
@@ -29,7 +28,7 @@ import { skillAdminRouter, skillPublicRouter } from './modules/skills/skill.rout
 export const createApp = () => {
   const app = express();
 
-  app.set('etag', false); // ✅ 304 disable
+  app.set('etag', false);
   app.set('trust proxy', 1);
 
   app.use(helmet());
@@ -39,7 +38,6 @@ export const createApp = () => {
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
 
-  // Cache-control: API সব response-এ no-store
   app.use((_req, res, next) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.setHeader('Pragma', 'no-cache');
@@ -78,7 +76,7 @@ export const createApp = () => {
   app.use(`${env.API_PREFIX}/profile`, profilePublicRouter);
   app.use(`${env.API_PREFIX}/admin/profile`, profileAdminRouter);
 
-  // Public /me
+  // Public /me (শুধু একবার)
   app.get(`${env.API_PREFIX}/me`, profileController.getMe);
 
   // Contact
@@ -96,7 +94,6 @@ export const createApp = () => {
 
   // GitHub
   app.use(`${env.API_PREFIX}/github`, githubRouter);
-  app.get(`${env.API_PREFIX}/me`, profileController.getMe);
 
   // Discoverability (/llms.txt)
   app.use('/', discoverRouter);

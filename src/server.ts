@@ -3,12 +3,18 @@ import { env } from './config/env';
 import { logger } from './config/logger';
 import { prisma } from './lib/prisma';
 
+// ✅ App এখানেই তৈরি (Vercel export-এর জন্য দরকার)
+const app = createApp();
+
+/**
+ * Local development server starter।
+ * Vercel-এ এই ফাংশন কল হয় না — Vercel নিজেই app.handle() করে।
+ */
 const start = async () => {
   try {
     await prisma.$connect();
     logger.info('✅ Database connected');
 
-    const app = createApp();
     const server = app.listen(env.PORT, () => {
       logger.info(`🚀 Server running at http://localhost:${env.PORT}${env.API_PREFIX}`);
     });
@@ -29,4 +35,10 @@ const start = async () => {
   }
 };
 
-start();
+// ⚠️ শুধু local/dev-এ listen করি
+if (process.env.NODE_ENV !== 'production') {
+  start();
+}
+
+// ✅ Vercel serverless function-এর জন্য export
+export default app;
