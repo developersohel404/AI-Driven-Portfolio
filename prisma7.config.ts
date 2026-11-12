@@ -8,7 +8,8 @@ export default defineConfig({
     path: 'prisma/migrations',
   },
   datasource: {
-    // ✅ env() নয়, process.env ব্যবহার করুন
     url: process.env.DATABASE_URL ?? '',
+
+    shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL,
   },
 });
