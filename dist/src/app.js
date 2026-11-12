@@ -32,7 +32,7 @@ const service_route_1 = require("./modules/services/service.route");
 const skill_route_1 = require("./modules/skills/skill.route");
 const createApp = () => {
     const app = (0, express_1.default)();
-    app.set('etag', false); // ✅ 304 disable
+    app.set('etag', false);
     app.set('trust proxy', 1);
     app.use((0, helmet_1.default)());
     app.use((0, cors_1.default)(cors_2.corsOptions));
@@ -40,7 +40,6 @@ const createApp = () => {
     app.use(express_1.default.json({ limit: '1mb' }));
     app.use(express_1.default.urlencoded({ extended: true }));
     app.use((0, cookie_parser_1.default)());
-    // Cache-control: API সব response-এ no-store
     app.use((_req, res, next) => {
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         res.setHeader('Pragma', 'no-cache');
@@ -68,7 +67,7 @@ const createApp = () => {
     // Profile
     app.use(`${env_1.env.API_PREFIX}/profile`, profile_route_1.profilePublicRouter);
     app.use(`${env_1.env.API_PREFIX}/admin/profile`, profile_route_1.profileAdminRouter);
-    // Public /me
+    // Public /me (শুধু একবার)
     app.get(`${env_1.env.API_PREFIX}/me`, profile_controller_1.profileController.getMe);
     // Contact
     app.use(`${env_1.env.API_PREFIX}/contact`, contact_route_1.contactPublicRouter);
@@ -82,7 +81,6 @@ const createApp = () => {
     app.use(`${env_1.env.API_PREFIX}/admin/dashboard`, dashboard_route_1.dashboardRouter);
     // GitHub
     app.use(`${env_1.env.API_PREFIX}/github`, github_route_1.githubRouter);
-    app.get(`${env_1.env.API_PREFIX}/me`, profile_controller_1.profileController.getMe);
     // Discoverability (/llms.txt)
     app.use('/', discover_route_1.discoverRouter);
     app.use(not_found_1.notFound);

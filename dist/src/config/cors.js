@@ -2,14 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.corsOptions = void 0;
 const env_1 = require("./env");
-const allowedOrigins = [env_1.env.FRONTEND_URL, 'http://localhost:3000', 'http://localhost:5173'];
+const allowedOrigins = [env_1.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'].filter(Boolean);
 exports.corsOptions = {
     origin: (origin, callback) => {
+        // Same-origin (server-to-server) অথবা allowed origin
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         }
         else {
-            callback(new Error('Not allowed by CORS'));
+            callback(new Error(`Not allowed by CORS: ${origin}`));
         }
     },
     credentials: true,
